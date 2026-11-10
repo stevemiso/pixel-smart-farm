@@ -47,8 +47,11 @@ const state = {
 };
 
 for (let i = 0; i < GRID.cols * GRID.rows; i++) {
-  state.plots.push({ crop: null, progress: 0, facility: null });
+  state.plots.push({ crop: null, progress: 0, facility: null, wateredUntil: 0 });
 }
+
+// 게임 내 경과 시간(초) — 물주기 지속시간 계산에 사용
+let gameTime = 0;
 
 const player = {
   x: WORLD_W / 2, y: 540,
@@ -84,6 +87,7 @@ const SFX = {
   buy:      () => { tone(660, 0.07, 'triangle', 0.14); tone(990, 0.12, 'triangle', 0.14, 0.05); },
   error:    () => tone(120, 0.18, 'sawtooth', 0.08),
   install:  () => tone(300, 0.15, 'triangle', 0.14),
+  water:    () => { tone(700, 0.05, 'sine', 0.09); tone(520, 0.06, 'sine', 0.09, 0.04); tone(380, 0.09, 'sine', 0.09, 0.08); },
 };
 
 // 간단한 배경 음악 (5음계 16스텝 루프)
@@ -153,11 +157,17 @@ function plotAtPoint(wx, wy) {
   }
   return -1;
 }
+// 물주기 효과가 살아있는지 확인 (게임 시간 기준)
+function isWatered(plot) {
+  return gameTime < plot.wateredUntil;
+}
+
 function plotSpeedInfo(plot) {
   if (!plot.crop) return null;
   const crop = cropById(plot.crop);
-  const mult = envMultiplier(crop, plot.facility);
-  return { crop, mult, pct: Math.round(mult * 100) };
+  const mult = envMultiplier(crop, plot.facility) * (isWatered(plot) ? WATER.boost : 1);
+  const waterLeft = isWatered(plot) ? Math.ceil(plot.wateredUntil - gameTime) : 0;
+  return { crop, mult, pct: Math.round(mult * 100), waterLeft };
 }
 
 /* ---------------- 상호작용 ---------------- */
@@ -178,6 +188,7 @@ function tryActOnPlot(i) {
     state.bag.crops[crop.id] = (state.bag.crops[crop.id] || 0) + 1;
     plot.crop = null;
     plot.progress = 0;
+    plot.wateredUntil = 0; // 수확하면 물 효과도 함께 초기화
     emitParticles(r.cx, r.cy, crop.colors.accent, 14);
     SFX.harvest();
     toast(`${crop.name} 수확 완료! 가방 확인`, 'good');
@@ -187,7 +198,24 @@ function tryActOnPlot(i) {
 
   const sel = state.selected;
 
-  // 2) 선택한 설비가 있으면 설치 (작물이 있어도 가능, 기존 설비는 교체)
+  // 2) 물뿌리개를 선택했으면 물주기 (작물이 심겨 있을 때만, 소모되지 않는 도구)
+  if (sel.type === 'facility' && sel.id === 'wateringCan' && (state.bag.facilities.wateringCan || 0) > 0) {
+    if (!plot.crop) {
+      toast('물은 작물에 주는 거예요! 먼저 씨앗을 심어보자.', 'bad');
+      SFX.error();
+      return;
+    }
+    const wasWatered = isWatered(plot);
+    plot.wateredUntil = gameTime + WATER.duration;
+    SFX.water();
+    emitParticles(r.cx, r.cy - 10, '#5ab8f0', 12);
+    emitParticles(r.cx, r.cy - 10, '#9adfff', 8);
+    if (wasWatered) toast(`물을 다시 줬어요! 속도 1.5배 (남은 ${WATER.duration}초)`, 'good');
+    else toast('물주기 완료! 30초간 속도 1.5배', 'good');
+    return;
+  }
+
+  // 3) 선택한 설비가 있으면 설치 (작물이 있어도 가능, 기존 설비는 교체)
   if (sel.type === 'facility' && (state.bag.facilities[sel.id] || 0) > 0) {
     const old = plot.facility;
     plot.facility = sel.id;
@@ -201,7 +229,7 @@ function tryActOnPlot(i) {
     return;
   }
 
-  // 3) 선택한 씨앗이 있고 빈 밭이면 심기
+  // 4) 선택한 씨앗이 있고 빈 밭이면 심기
   if (sel.type === 'seed' && (state.bag.seeds[sel.id] || 0) > 0) {
     if (plot.crop) {
       toast('이미 작물이 심겨 있어요!', 'bad');
@@ -219,7 +247,7 @@ function tryActOnPlot(i) {
     return;
   }
 
-  // 4) 그 외 → 상태 안내
+  // 5) 그 외 → 상태 안내
   if (plot.crop) {
     const info = plotSpeedInfo(plot);
     toast(`${info.crop.name} 재배 중… 속도 ${info.pct}%`, '');
@@ -353,6 +381,9 @@ function renderShop() {
     body.innerHTML = '';
     for (const key of Object.keys(FACILITIES)) {
       const fac = FACILITIES[key];
+      const owned = (state.bag.facilities[key] || 0) > 0;
+      // 도구(물뿌리개)는 한 번만 사면 되므로 이미 갖고 있으면 구매 불가
+      const alreadyOwned = fac.isTool && owned;
       const card = document.createElement('div');
       card.className = 'card';
       card.innerHTML = `
@@ -361,7 +392,7 @@ function renderShop() {
           <div class="card-name">${fac.name}</div>
           <div class="card-sub">${fac.effectText}</div>
         </div>
-        <button class="buy-btn" ${state.money < fac.price ? 'disabled' : ''}>${fmt(fac.price)} G</button>`;
+        <button class="buy-btn" ${state.money < fac.price || alreadyOwned ? 'disabled' : ''}>${alreadyOwned ? '구매 완료' : fmt(fac.price) + ' G'}</button>`;
       card.querySelector('.buy-btn').addEventListener('click', () => buyFacility(fac.id));
       body.appendChild(card);
     }
@@ -431,9 +462,12 @@ function renderBag() {
       const fac = facById(id);
       const item = document.createElement('div');
       item.className = 'card';
+      const useText = fac.isTool
+        ? '작물이 심긴 밭을 클릭해 물주기 (없어지지 않는 도구)'
+        : '밭을 클릭해 설치 (기존 설비는 교체됨)';
       item.innerHTML = `<div class="card-icon">${fac.icon}</div>
         <div class="card-info"><div class="card-name">${fac.name} ×${state.bag.facilities[id]}</div>
-        <div class="card-sub">밭을 클릭해 설치 (기존 설비는 교체됨)</div></div>`;
+        <div class="card-sub">${useText}</div></div>`;
       body.appendChild(item);
     }
   }
@@ -578,9 +612,13 @@ function updatePlotTip() {
     const pct = Math.min(100, Math.floor(plot.progress * 100));
     const speedCls = info.mult >= 1 ? 'speed-100' : 'speed-slow';
     const envOk = info.mult >= 1;
+    const waterHtml = info.waterLeft > 0
+      ? `<div>💧 물주기 효과 중 (남은 ${info.waterLeft}초)</div>`
+      : '';
     html = `<div class="tip-title">${cropById(plot.crop).name} ${plot.progress >= 1 ? '✅ 수확 가능!' : ''}</div>
       <div>성장 ${pct}%</div>
-      <div>속도 <span class="${speedCls}">${info.pct}%</span> ${envOk ? '😊 환경 최적' : '😟 환경 안 맞음'}</div>`;
+      <div>속도 <span class="${speedCls}">${info.pct}%</span> ${envOk ? '😊 환경 최적' : '😟 환경 안 맞음'}</div>
+      ${waterHtml}`;
   } else {
     const facName = plot.facility ? facById(plot.facility).name : '없음';
     html = `<div class="tip-title">빈 밭</div><div>설비: ${facName}</div>`;
@@ -742,15 +780,20 @@ function drawSign() {
 }
 
 /* ---------------- 그리기: 밭 ---------------- */
-function drawSoil(r) {
+function drawSoil(r, wet = false) {
   ctx.fillStyle = '#6d4520';
   ctx.fillRect(r.x - 3, r.y - 3, r.w + 6, r.h + 6);
-  ctx.fillStyle = '#8a5a2b';
+  ctx.fillStyle = wet ? '#6b431c' : '#8a5a2b'; // 젖은 흙은 더 어두운 갈색
   ctx.fillRect(r.x, r.y, r.w, r.h);
   const rSoil = seededRandom(r.x * 31 + r.y);
   for (let i = 0; i < 14; i++) {
-    ctx.fillStyle = rSoil() > 0.5 ? '#7a4c22' : '#96632f';
+    ctx.fillStyle = wet ? (rSoil() > 0.5 ? '#5a3818' : '#734e24') : (rSoil() > 0.5 ? '#7a4c22' : '#96632f');
     ctx.fillRect(r.x + 4 + Math.floor(rSoil() * (r.w - 12)), r.y + 4 + Math.floor(rSoil() * (r.h - 12)), 6, 4);
+  }
+  if (wet) {
+    // 물이 고인 듯한 은은한 파란빛
+    ctx.fillStyle = 'rgba(90, 160, 220, 0.10)';
+    ctx.fillRect(r.x, r.y, r.w, r.h);
   }
 }
 
@@ -939,6 +982,18 @@ function drawPlotOverlays(i, plot) {
     ctx.fillStyle = info.mult >= 1 ? '#58d94a' : '#f5a83c';
     ctx.fillRect(r.x + 5, r.y + r.h - 8, Math.round(bw * plot.progress), 6);
   }
+  // 물주기 효과 표시 (💧 + 남은 시간 막대)
+  if (plot.crop && isWatered(plot)) {
+    const left = clamp((plot.wateredUntil - gameTime) / WATER.duration, 0, 1);
+    ctx.font = '13px Galmuri11, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('💧', r.x + r.w - 20, r.y + 16);
+    ctx.fillStyle = 'rgba(0,0,0,0.35)';
+    ctx.fillRect(r.x + r.w - 32, r.y + 22, 24, 4);
+    ctx.fillStyle = '#5ab8f0';
+    ctx.fillRect(r.x + r.w - 32, r.y + 22, Math.round(24 * left), 4);
+  }
+
   // 수확 가능 표시
   if (plot.crop && plot.progress >= 1) {
     const bob = Math.sin(performance.now() / 200) * 3;
@@ -1045,11 +1100,13 @@ function update(dt) {
     }
   }
 
-  // 작물 성장
+  gameTime += dt;
+
+  // 작물 성장 (환경 배율 × 물주기 배율)
   for (const plot of state.plots) {
     if (plot.crop && plot.progress < 1) {
       const crop = cropById(plot.crop);
-      const mult = envMultiplier(crop, plot.facility);
+      const mult = envMultiplier(crop, plot.facility) * (isWatered(plot) ? WATER.boost : 1);
       plot.progress += (dt / crop.growTime) * mult;
       if (plot.progress >= 1) {
         plot.progress = 1;
@@ -1072,7 +1129,7 @@ function render() {
   for (let i = 0; i < state.plots.length; i++) {
     const plot = state.plots[i];
     const r = plotRect(i);
-    drawSoil(r);
+    drawSoil(r, isWatered(plot));
     if (plot.facility) drawFacilityBase(i, plot.facility);
     if (plot.crop) drawCrop(i, plot);
     if (plot.facility) drawFacilityCover(i, plot.facility);
@@ -1142,6 +1199,8 @@ window.render_game_to_text = () => JSON.stringify({
       progress: p.crop ? Math.round(p.progress * 100) : 0,
       ready: !!(p.crop && p.progress >= 1),
       speedPct: info ? info.pct : null,
+      watered: isWatered(p),
+      waterLeftSec: isWatered(p) ? Math.ceil(p.wateredUntil - gameTime) : 0,
       facility: p.facility || null,
     };
   }),

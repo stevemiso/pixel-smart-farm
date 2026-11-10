@@ -18,7 +18,7 @@ const RARITIES = {
 const CROPS = [
   {
     id: 'lettuce', name: '상추', rarity: 'common',
-    seedPrice: 10, sellPrice: 28, growTime: 20,
+    seedPrice: 10, sellPrice: 28, growTime: 2,
     light: 'shade', temp: 'cool', shape: 'leafy',
     colors: { leaf: '#57b85a', leaf2: '#3d9444', accent: '#a8e06a' },
     desc: '서늘하고 그늘진 환경을 좋아하는 잎채소. 빠르게 자라 입문용으로 좋다.',
@@ -26,7 +26,7 @@ const CROPS = [
   },
   {
     id: 'carrot', name: '당근', rarity: 'common',
-    seedPrice: 12, sellPrice: 33, growTime: 22,
+    seedPrice: 12, sellPrice: 33, growTime: 2.5,
     light: 'sun', temp: 'cool', shape: 'root',
     colors: { leaf: '#4aa84f', leaf2: '#357f3c', accent: '#f08a3c' },
     desc: '햇빛을 좋아하는 뿌리채소. 서늘한 기후에서 잘 자란다.',
@@ -34,7 +34,7 @@ const CROPS = [
   },
   {
     id: 'spinach', name: '시금치', rarity: 'uncommon',
-    seedPrice: 40, sellPrice: 108, growTime: 40,
+    seedPrice: 40, sellPrice: 108, growTime: 4,
     light: 'shade', temp: 'cool', shape: 'leafy',
     colors: { leaf: '#3f9e58', leaf2: '#2c7440', accent: '#8bd46a' },
     desc: '그늘과 서늘함을 좋아하는 웰빙 채소. 가을 작물의 대표주자.',
@@ -42,7 +42,7 @@ const CROPS = [
   },
   {
     id: 'potato', name: '감자', rarity: 'uncommon',
-    seedPrice: 45, sellPrice: 120, growTime: 45,
+    seedPrice: 45, sellPrice: 120, growTime: 4.5,
     light: 'sun', temp: 'cool', shape: 'root',
     colors: { leaf: '#5faf55', leaf2: '#44823f', accent: '#d9b36a' },
     desc: '햇빛 아래 서늘하게 기르는 뿌리채소. 다재다능한 주식 작물.',
@@ -50,7 +50,7 @@ const CROPS = [
   },
   {
     id: 'tomato', name: '토마토', rarity: 'rare',
-    seedPrice: 150, sellPrice: 420, growTime: 90,
+    seedPrice: 150, sellPrice: 420, growTime: 9,
     light: 'sun', temp: 'warm', shape: 'bush',
     colors: { leaf: '#4c9e4c', leaf2: '#387738', accent: '#e8483f' },
     desc: '따뜻함과 강한 햇빛을 모두 좋아하는 대표 여름 작물.',
@@ -58,7 +58,7 @@ const CROPS = [
   },
   {
     id: 'strawberry', name: '딸기', rarity: 'rare',
-    seedPrice: 160, sellPrice: 450, growTime: 95,
+    seedPrice: 160, sellPrice: 450, growTime: 10,
     light: 'shade', temp: 'warm', shape: 'bush',
     colors: { leaf: '#52a85e', leaf2: '#3a7d46', accent: '#f2557d' },
     desc: '따뜻하지만 직사광선은 싫어하는 까다로운 과일. 온실 + 암막 조합이 필요하다.',
@@ -66,7 +66,7 @@ const CROPS = [
   },
   {
     id: 'chili', name: '고추', rarity: 'epic',
-    seedPrice: 500, sellPrice: 1420, growTime: 180,
+    seedPrice: 500, sellPrice: 1420, growTime: 18,
     light: 'sun', temp: 'warm', shape: 'bush',
     colors: { leaf: '#479a4a', leaf2: '#336f38', accent: '#d43a2f' },
     desc: '뜨거운 태양과 따뜻한 온실을 좋아하는 매운 작물. 값이 높다.',
@@ -74,7 +74,7 @@ const CROPS = [
   },
   {
     id: 'blueberry', name: '블루베리', rarity: 'epic',
-    seedPrice: 550, sellPrice: 1560, growTime: 190,
+    seedPrice: 550, sellPrice: 1560, growTime: 19,
     light: 'shade', temp: 'cool', shape: 'bush',
     colors: { leaf: '#4f9c63', leaf2: '#387148', accent: '#5a6fd6' },
     desc: '그늘진 서늘한 곳의 고급 과일. 암막 설비가 필수다.',
@@ -82,7 +82,7 @@ const CROPS = [
   },
   {
     id: 'watermelon', name: '수박', rarity: 'legendary',
-    seedPrice: 1800, sellPrice: 5300, growTime: 360,
+    seedPrice: 1800, sellPrice: 5300, growTime: 36,
     light: 'sun', temp: 'warm', shape: 'vine',
     colors: { leaf: '#3f9a4d', leaf2: '#2c7138', accent: '#2f9e44' },
     desc: '강한 햇볕과 더위를 사랑하는 여름의 왕. 최고급 작물.',
@@ -90,13 +90,16 @@ const CROPS = [
   },
   {
     id: 'dragonfruit', name: '용과', rarity: 'legendary',
-    seedPrice: 2000, sellPrice: 5900, growTime: 380,
+    seedPrice: 2000, sellPrice: 5900, growTime: 38,
     light: 'shade', temp: 'warm', shape: 'cactus',
     colors: { leaf: '#57a05c', leaf2: '#3d7842', accent: '#f2557d' },
     desc: '따뜻한 온실 + 암막이라는 특별한 환경이 필요한 최고 등급 작물.',
     science: '용과는 열대 선인장의 열매다. 원래 반건조 그늘 숲에서 자라므로 강한 직사광선보다 따뜻하고 부드러운 빛을 좋아한다. 줄기는 수분을 저장하는 다육 조직으로 되어 있다.',
   },
 ];
+
+// 물주기 설정: 물을 준 밭은 duration초 동안 성장 속도 boost배
+const WATER = { duration: 30, boost: 1.5 };
 
 // 설비 (밭 한 칸에 설치, 교체 가능)
 const FACILITIES = {
@@ -120,6 +123,13 @@ const FACILITIES = {
     desc: '밭 한 칸을 투명 재질로 덮어 따뜻하게 유지한다.',
     science: '온실의 투명 지붕은 짧은 파장의 햇빛은 통과시키지만, 지면에서 다시 나오는 긴 파장의 적외선 복사열은 밖으로 내보내지 못해 내부 기온이 올라간다(온실 효과). 따뜻한 작물에 필수!',
     effectText: '따뜻한 작물 속도 100% (미설치 시 45%) / 서늘한 작물은 60%로 느려짐',
+  },
+  wateringCan: {
+    id: 'wateringCan', name: '물뿌리개', price: 300, isTool: true,
+    icon: '💧', color: '#5ab8f0',
+    desc: '작물에 물을 주면 30초 동안 성장 속도가 1.5배 빨라진다. 한 번만 구매하면 계속 쓸 수 있는 도구.',
+    science: '물은 광합성의 원료다. 뿌리가 빨아들인 물은 줄기를 타고 잎까지 올라가고, 증산 작용이 물을 끌어올리는 힘이 되어 영양분도 함께 운반된다. 물이 부족하면 잎의 기공이 닫혀 이산화 탄소가 들어오지 못해 광합성이 느려진다.',
+    effectText: '물을 준 밭은 30초간 성장 속도 1.5배 (환경 보너스와 곱해짐)',
   },
 };
 
