@@ -18,7 +18,7 @@ const RARITIES = {
 const CROPS = [
   {
     id: 'lettuce', name: '상추', rarity: 'common',
-    seedPrice: 10, sellPrice: 28, growTime: 15,
+    seedPrice: 10, sellPrice: 28, growTime: 20,
     light: 'shade', temp: 'cool', shape: 'leafy',
     colors: { leaf: '#57b85a', leaf2: '#3d9444', accent: '#a8e06a' },
     desc: '서늘하고 그늘진 환경을 좋아하는 잎채소. 빠르게 자라 입문용으로 좋다.',
@@ -26,7 +26,7 @@ const CROPS = [
   },
   {
     id: 'carrot', name: '당근', rarity: 'common',
-    seedPrice: 12, sellPrice: 33, growTime: 17,
+    seedPrice: 12, sellPrice: 33, growTime: 22,
     light: 'sun', temp: 'cool', shape: 'root',
     colors: { leaf: '#4aa84f', leaf2: '#357f3c', accent: '#f08a3c' },
     desc: '햇빛을 좋아하는 뿌리채소. 서늘한 기후에서 잘 자란다.',
@@ -34,7 +34,7 @@ const CROPS = [
   },
   {
     id: 'spinach', name: '시금치', rarity: 'uncommon',
-    seedPrice: 40, sellPrice: 108, growTime: 25,
+    seedPrice: 40, sellPrice: 108, growTime: 40,
     light: 'shade', temp: 'cool', shape: 'leafy',
     colors: { leaf: '#3f9e58', leaf2: '#2c7440', accent: '#8bd46a' },
     desc: '그늘과 서늘함을 좋아하는 웰빙 채소. 가을 작물의 대표주자.',
@@ -42,7 +42,7 @@ const CROPS = [
   },
   {
     id: 'potato', name: '감자', rarity: 'uncommon',
-    seedPrice: 45, sellPrice: 120, growTime: 30,
+    seedPrice: 45, sellPrice: 120, growTime: 45,
     light: 'sun', temp: 'cool', shape: 'root',
     colors: { leaf: '#5faf55', leaf2: '#44823f', accent: '#d9b36a' },
     desc: '햇빛 아래 서늘하게 기르는 뿌리채소. 다재다능한 주식 작물.',
@@ -50,7 +50,7 @@ const CROPS = [
   },
   {
     id: 'tomato', name: '토마토', rarity: 'rare',
-    seedPrice: 150, sellPrice: 420, growTime: 60,
+    seedPrice: 150, sellPrice: 420, growTime: 90,
     light: 'sun', temp: 'warm', shape: 'bush',
     colors: { leaf: '#4c9e4c', leaf2: '#387738', accent: '#e8483f' },
     desc: '따뜻함과 강한 햇빛을 모두 좋아하는 대표 여름 작물.',
@@ -66,7 +66,7 @@ const CROPS = [
   },
   {
     id: 'chili', name: '고추', rarity: 'epic',
-    seedPrice: 500, sellPrice: 1420, growTime: 150,
+    seedPrice: 500, sellPrice: 1420, growTime: 180,
     light: 'sun', temp: 'warm', shape: 'bush',
     colors: { leaf: '#479a4a', leaf2: '#336f38', accent: '#d43a2f' },
     desc: '뜨거운 태양과 따뜻한 온실을 좋아하는 매운 작물. 값이 높다.',
@@ -82,7 +82,7 @@ const CROPS = [
   },
   {
     id: 'watermelon', name: '수박', rarity: 'legendary',
-    seedPrice: 1800, sellPrice: 5300, growTime: 270,
+    seedPrice: 1800, sellPrice: 5300, growTime: 360,
     light: 'sun', temp: 'warm', shape: 'vine',
     colors: { leaf: '#3f9a4d', leaf2: '#2c7138', accent: '#2f9e44' },
     desc: '강한 햇볕과 더위를 사랑하는 여름의 왕. 최고급 작물.',
@@ -90,7 +90,7 @@ const CROPS = [
   },
   {
     id: 'dragonfruit', name: '용과', rarity: 'legendary',
-    seedPrice: 2000, sellPrice: 5900, growTime: 300,
+    seedPrice: 2000, sellPrice: 5900, growTime: 380,
     light: 'shade', temp: 'warm', shape: 'cactus',
     colors: { leaf: '#57a05c', leaf2: '#3d7842', accent: '#f2557d' },
     desc: '따뜻한 온실 + 암막이라는 특별한 환경이 필요한 최고 등급 작물.',
